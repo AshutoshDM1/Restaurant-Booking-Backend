@@ -11,10 +11,42 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  
+}
+
+model Restaurant {
+  id                Int       @id @default(autoincrement())
+  name              String
+  location          String
+  cuisine           String[]
+  totalSeats        Int        // number of tables in the restaurant available
+  seatsAvailable    Int        // number of tables available in the restaurant
+  booking           Booking[]
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id             Int              @id @default(autoincrement())
+  name           String
+  email          String           @unique
+  password       String
+  booking        Booking[]
+}
+
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id             Int           @id @default(autoincrement())
+  numberOfGuests Int
+  restaurant     Restaurant    @relation(fields: [restaurantId], references: [id])
+  restaurantId   Int
+  user           User          @relation(fields: [userId], references: [id])
+  userId         Int
+  status         BookingStatus @default(ACTIVE)
+  cancelledAt    DateTime?     // Track when the booking was cancelled
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 }

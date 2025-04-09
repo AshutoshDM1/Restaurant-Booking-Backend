@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import { app } from '../index';
+import { app } from './index';
 
 describe('Main Route Tests', () => {
   it('should return 200 for GET /', async () => {
