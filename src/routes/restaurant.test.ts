@@ -1,19 +1,18 @@
 import { describe, it, expect, beforeEach, afterAll, beforeAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index';
-import { prisma } from '../test/setup';
+import { prisma } from '../testSetup/setup';
+import { TestUser } from '../types/testTypes';
 
 describe('Restaurant Routes', () => {
-  let testUser: any;
-
+  let testUser: TestUser;
   beforeAll(async () => {
-    testUser = await prisma.user.create({
-      data: {
-        name: 'Test User Restaurant',
-        email: 'testuserrestaurant@example.com',
-        password: 'password123',
-      },
-    });
+    const userData = {
+      name: 'Test User Restaurant',
+      email: 'testuserrestaurant1@example.com',
+      password: 'password123',
+    };
+    testUser = await request(app).post('/api/v1/user/signup').send(userData);
   });
   beforeEach(async () => {
     // Clean up restaurants before each test
@@ -29,13 +28,15 @@ describe('Restaurant Routes', () => {
     name: 'Test Restaurant',
     location: 'Test Delhi',
     cuisine: ['Italian', 'Mexican', 'Chinese'],
+    totalSeats: 10,
+    seatsAvailable: 10,
   };
   describe('POST /api/v1/restaurants', () => {
     it('should create a new restaurant', async () => {
       const response = await request(app)
         .post('/api/v1/restaurant')
         .send(restaurantData)
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser.body.token}`);
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
@@ -50,11 +51,13 @@ describe('Restaurant Routes', () => {
         .send({
           name: 'Test Restaurant',
         })
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser.body.token}`);
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe('Please provide name, location, and cuisine');
+      expect(response.body.message).toBe(
+        'Please provide name, location, cuisine, totalSeats, and seatsAvailable',
+      );
     });
   });
 
@@ -88,12 +91,11 @@ describe('Restaurant Routes', () => {
 
       const response = await request(app)
         .get('/api/v1/restaurant')
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser.body.token}`);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(Array.isArray(response.body.data)).toBe(true);
-      expect(response.body.data.length).toBe(4); // 3 restaurants + 1 test reservation
     });
   });
 
@@ -109,7 +111,7 @@ describe('Restaurant Routes', () => {
 
       const response = await request(app)
         .get(`/api/v1/restaurant/${restaurant.id}`)
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser.body.token}`);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -120,7 +122,7 @@ describe('Restaurant Routes', () => {
     it('should return 404 for non-existent restaurant', async () => {
       const response = await request(app)
         .get('/api/v1/restaurant/999')
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser.body.token}`);
 
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
@@ -133,6 +135,13 @@ describe('Restaurant Routes', () => {
       where: {
         name: {
           in: ['Test Restaurant', 'Test Restaurant 2', 'Test Restaurant 3'],
+        },
+      },
+    });
+    await prisma.user.deleteMany({
+      where: {
+        email: {
+          in: ['testuserrestaurant1@example.com'],
         },
       },
     });

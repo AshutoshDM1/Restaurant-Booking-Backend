@@ -11,7 +11,12 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  
+}
+
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
 }
 
 model Restaurant {
@@ -32,21 +37,15 @@ model User {
   booking        Booking[]
 }
 
-enum BookingStatus {
-  ACTIVE
-  CANCELLED
-  COMPLETED
-}
-
 model Booking {
-  id             Int           @id @default(autoincrement())
+  id             Int             @id @default(autoincrement())
   numberOfGuests Int
-  restaurant     Restaurant    @relation(fields: [restaurantId], references: [id])
+  restaurant     Restaurant      @relation(fields: [restaurantId], references: [id])
   restaurantId   Int
-  user           User          @relation(fields: [userId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
   userId         Int
-  status         BookingStatus @default(ACTIVE)
-  cancelledAt    DateTime?     // Track when the booking was cancelled
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  status         BookingStatus   @default(ACTIVE)
+  cancelledAt    DateTime?       // When the booking was cancelled
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }

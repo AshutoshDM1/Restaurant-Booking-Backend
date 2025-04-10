@@ -2,12 +2,12 @@ import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index';
 import bcrypt from 'bcryptjs';
-import { prisma } from '../test/setup';
+import { prisma } from '../testSetup/setup';
 
 describe('User Routes', () => {
   const userData = {
     name: 'Test User',
-    email: 'test@example.com',
+    email: 'testuser@example.com',
     password: 'password123',
   };
 

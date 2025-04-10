@@ -5,12 +5,24 @@ import prisma from '../db/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-const signup: RequestHandler<
-  {},
-  {},
-  { name: string; email: string; password: string },
-  {}
-> = async (req, res) => {
+type SignupParams = Record<string, never>;
+type SignupResponse = {
+  success: boolean;
+  message: string;
+  token?: string;
+  error?: string;
+};
+type SignupBody = {
+  name: string;
+  email: string;
+  password: string;
+};
+type SignupQuery = Record<string, never>;
+
+const signup: RequestHandler<SignupParams, SignupResponse, SignupBody, SignupQuery> = async (
+  req,
+  res,
+) => {
   const { name, email, password } = req.body;
 
   try {
@@ -35,7 +47,6 @@ const signup: RequestHandler<
       return;
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -48,7 +59,6 @@ const signup: RequestHandler<
       },
     });
 
-    // Generate JWT token
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
 
     res.status(201).json({
@@ -66,7 +76,23 @@ const signup: RequestHandler<
   }
 };
 
-const login: RequestHandler<{}, {}, { email: string; password: string }, {}> = async (req, res) => {
+type LoginParams = Record<string, never>;
+type LoginResponse = {
+  success?: boolean;
+  message: string;
+  response?: string;
+  error?: string;
+};
+type LoginBody = {
+  email: string;
+  password: string;
+};
+type LoginQuery = Record<string, never>;
+
+const login: RequestHandler<LoginParams, LoginResponse, LoginBody, LoginQuery> = async (
+  req,
+  res,
+) => {
   const { email, password } = req.body;
   try {
     if (!email || !password) {
@@ -77,7 +103,6 @@ const login: RequestHandler<{}, {}, { email: string; password: string }, {}> = a
       return;
     }
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -90,7 +115,7 @@ const login: RequestHandler<{}, {}, { email: string; password: string }, {}> = a
       return;
     }
 
-    // Verify password
+    // Verify password tHE hASHED password 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -101,7 +126,6 @@ const login: RequestHandler<{}, {}, { email: string; password: string }, {}> = a
       return;
     }
 
-    // Generate JWT token
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
 
     res.status(200).json({ message: 'Login successful', response: token });

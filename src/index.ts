@@ -27,6 +27,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
     message: 'Something went wrong!',
     error: err.message,
   });
+  next();
 });
 
 app.get('/', async (req, res) => {

@@ -1,12 +1,26 @@
 import { RequestHandler } from 'express';
 import prisma from '../db/db';
 import { BookingStatus } from '@prisma/client';
+import {
+  ReserveTableParams,
+  ReserveTableResponse,
+  ReserveTableBody,
+  ReserveTableQuery,
+  CancelReservationParams,
+  CancelReservationResponse,
+  CancelReservationBody,
+  CancelReservationQuery,
+  GetAllReservationsParams,
+  GetAllReservationsResponse,
+  GetAllReservationsBody,
+  GetAllReservationsQuery,
+} from '../types/reservationTypes';
 
 const reserveTable: RequestHandler<
-  {},
-  {},
-  { restaurantId: number; userId: number; numberOfGuests: number },
-  {}
+  ReserveTableParams,
+  ReserveTableResponse,
+  ReserveTableBody,
+  ReserveTableQuery
 > = async (req, res) => {
   const { restaurantId, userId, numberOfGuests } = req.body;
 
@@ -79,7 +93,12 @@ const reserveTable: RequestHandler<
   }
 };
 
-const cancelReservation: RequestHandler<{}, {}, { bookingId: number }, {}> = async (req, res) => {
+const cancelReservation: RequestHandler<
+  CancelReservationParams,
+  CancelReservationResponse,
+  CancelReservationBody,
+  CancelReservationQuery
+> = async (req, res) => {
   const { bookingId } = req.body;
 
   try {
@@ -156,7 +175,12 @@ const cancelReservation: RequestHandler<{}, {}, { bookingId: number }, {}> = asy
   }
 };
 
-const getAllReservations: RequestHandler<{ userId: string }, {}, {}, {}> = async (req, res) => {
+const getAllReservations: RequestHandler<
+  GetAllReservationsParams,
+  GetAllReservationsResponse,
+  GetAllReservationsBody,
+  GetAllReservationsQuery
+> = async (req, res) => {
   const { userId } = req.params;
 
   try {
@@ -204,4 +228,5 @@ const getAllReservations: RequestHandler<{ userId: string }, {}, {}, {}> = async
     return;
   }
 };
+
 export { reserveTable, cancelReservation, getAllReservations };

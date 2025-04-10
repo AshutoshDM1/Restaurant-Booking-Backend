@@ -1,11 +1,25 @@
 import { RequestHandler } from 'express';
 import prisma from '../db/db';
+import {
+  CreateRestaurantBody,
+  CreateRestaurantQuery,
+  CreateRestaurantParams,
+  CreateRestaurantResponse,
+  GetAllRestaurantsParams,
+  GetAllRestaurantsResponse,
+  GetAllRestaurantsQuery,
+  GetAllRestaurantsBody,
+  GetRestaurantByIdResponse,
+  GetRestaurantByIdParams,
+  GetRestaurantByIdBody,
+  GetRestaurantByIdQuery,
+} from '../types/restaurantTypes';
 
 const createRestaurant: RequestHandler<
-  {},
-  {},
-  { name: string; location: string; cuisine: string[]; totalSeats: number; seatsAvailable: number },
-  {}
+  CreateRestaurantParams,
+  CreateRestaurantResponse,
+  CreateRestaurantBody,
+  CreateRestaurantQuery
 > = async (req, res) => {
   const { name, location, cuisine, totalSeats, seatsAvailable } = req.body;
 
@@ -43,7 +57,12 @@ const createRestaurant: RequestHandler<
   }
 };
 
-const getAllRestaurants: RequestHandler<{}, {}, {}, {}> = async (req, res) => {
+const getAllRestaurants: RequestHandler<
+  GetAllRestaurantsParams,
+  GetAllRestaurantsResponse,
+  GetAllRestaurantsBody,
+  GetAllRestaurantsQuery
+> = async (req, res) => {
   try {
     const restaurants = await prisma.restaurant.findMany({});
 
@@ -62,7 +81,12 @@ const getAllRestaurants: RequestHandler<{}, {}, {}, {}> = async (req, res) => {
   }
 };
 
-const getRestaurantById: RequestHandler<{ id: string }, {}, {}, {}> = async (req, res) => {
+const getRestaurantById: RequestHandler<
+  GetRestaurantByIdParams,
+  GetRestaurantByIdResponse,
+  GetRestaurantByIdBody,
+  GetRestaurantByIdQuery
+> = async (req, res) => {
   const { id } = req.params;
 
   try {

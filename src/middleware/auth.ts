@@ -10,6 +10,11 @@ interface AuthRequest extends Request {
   };
 }
 
+interface JwtPayload {
+  id: number;
+  email: string;
+}
+
 export const authenticateToken: RequestHandler = async (
   req: AuthRequest,
   res: Response,
@@ -26,8 +31,8 @@ export const authenticateToken: RequestHandler = async (
       });
       return;
     }
-
-    jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    // @ts-expect-error The jwt.verify callback types are not properly recognized
+    jwt.verify(token, JWT_SECRET, (err: Error | null, user: JwtPayload) => {
       if (err) {
         res.status(403).json({
           success: false,
