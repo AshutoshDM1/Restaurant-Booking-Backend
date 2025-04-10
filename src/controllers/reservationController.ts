@@ -15,6 +15,7 @@ import {
   GetAllReservationsBody,
   GetAllReservationsQuery,
 } from '../types/reservationTypes';
+import { emailService } from '../emailServices/emailService';
 
 const reserveTable: RequestHandler<
   ReserveTableParams,
@@ -29,6 +30,24 @@ const reserveTable: RequestHandler<
       res.status(400).json({
         success: false,
         message: 'Please provide all required booking details',
+      });
+      return;
+    }
+
+    // Check if user already has an active booking at this restaurant
+    const existingBooking = await prisma.booking.findFirst({
+      where: {
+        userId: userId,
+        restaurantId: restaurantId,
+        status: BookingStatus.ACTIVE,
+      },
+    });
+
+    if (existingBooking) {
+      res.status(400).json({
+        success: false,
+        message:
+          'You already have an active booking at this restaurant booking Id:' + existingBooking.id,
       });
       return;
     }
@@ -53,8 +72,21 @@ const reserveTable: RequestHandler<
       return;
     }
 
-    // Use a transaction to ensure both operations succeed or fail together I have learned this in my previous primeWallet project
+    // Use a transaction to ensure both operations succeed or fail together
     const booking = await prisma.$transaction(async (tx) => {
+      // Double-check active bookings within transaction to prevent race conditions
+      const activeBooking = await tx.booking.findFirst({
+        where: {
+          userId: userId,
+          restaurantId: restaurantId,
+          status: BookingStatus.ACTIVE,
+        },
+      });
+
+      if (activeBooking) {
+        throw new Error('Double booking detected');
+      }
+
       // Create the booking
       const newBooking = await tx.booking.create({
         data: {
@@ -78,12 +110,39 @@ const reserveTable: RequestHandler<
       return newBooking;
     });
 
+    // After successful booking creation, send confirmation email
+    try {
+      await emailService.sendBookingConfirmation(booking.user.email, {
+        name: booking.user.name,
+        restaurantName: booking.restaurant.name,
+        numberOfGuests: booking.numberOfGuests,
+        bookingId: booking.id,
+        date: booking.createdAt,
+        time: booking.createdAt.toLocaleTimeString(),
+        restaurantLocation: booking.restaurant.location,
+        managementLink: `https://restaurant-table-booking-frontend.vercel.app/reservations/${booking.id}`,
+      });
+      console.log('Booking confirmation email sent successfully to:', booking.user.email);
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
+      // Continue with the response even if email fails
+    }
+
     res.status(201).json({
       success: true,
       message: 'Booking created successfully',
       data: booking,
     });
   } catch (error) {
+    // Handle specific error for double booking
+    if (error instanceof Error && error.message === 'Double booking detected') {
+      res.status(400).json({
+        success: false,
+        message: 'You already have an active booking at this restaurant',
+      });
+      return;
+    }
+
     res.status(500).json({
       success: false,
       message: 'Error reserving table',
@@ -114,6 +173,7 @@ const cancelReservation: RequestHandler<
       where: { id: bookingId },
       include: {
         restaurant: true,
+        user: true,
       },
     });
 
@@ -160,6 +220,22 @@ const cancelReservation: RequestHandler<
         },
       });
     });
+
+    // After successful cancellation, send cancellation email
+    try {
+      await emailService.sendBookingCancellation(booking.user.email, {
+        name: booking.user.name,
+        restaurantName: booking.restaurant.name,
+        bookingId: booking.id,
+        bookingDate: booking.createdAt,
+        cancellationTime: new Date(),
+        bookingLink: 'https://restaurant-table-booking-frontend.vercel.app/restaurants',
+      });
+      console.log('Booking cancellation email sent successfully to:', booking.user.email);
+    } catch (emailError) {
+      console.error('Failed to send cancellation email:', emailError);
+      // Continue with the response even if email fails
+    }
 
     res.status(200).json({
       success: true,

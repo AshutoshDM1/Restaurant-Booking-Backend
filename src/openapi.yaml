@@ -1,0 +1,545 @@
+openapi: 3.0.3
+info:
+  title: Restaurant Table Booking API
+  description: |
+    A backend API for restaurant table booking applications.
+    This API allows users to sign up, log in, search restaurants, book tables, and manage reservations.
+  version: 1.0.0
+  contact:
+    name: EliteDev Tech
+    url: https://elitedev.tech
+servers:
+  - url: https://restaurant-table-booking-backend.elitedev.tech/api/v1
+    description: Production server
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Restaurants
+    description: Restaurant management endpoints
+  - name: Reservations
+    description: Reservation management endpoints
+
+paths:
+  /user/signup:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with name, email, and password
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: User created successfully
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate a user with email and password
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login successful
+                  response:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restaurant:
+    get:
+      tags:
+        - Restaurants
+      summary: Get all restaurants
+      description: Retrieve a list of all restaurants
+      operationId: getAllRestaurants
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of restaurants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 3
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Restaurant'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Restaurants
+      summary: Add a new restaurant
+      description: Create a new restaurant entry
+      operationId: createRestaurant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - location
+                - cuisine
+                - totalSeats
+                - seatsAvailable
+              properties:
+                name:
+                  type: string
+                  example: Italian Bistro
+                location:
+                  type: string
+                  example: 123 Main St, New York, NY
+                cuisine:
+                  type: array
+                  items:
+                    type: string
+                  example: ['Italian', 'Mediterranean']
+                totalSeats:
+                  type: integer
+                  example: 50
+                seatsAvailable:
+                  type: integer
+                  example: 50
+      responses:
+        '201':
+          description: Restaurant created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Restaurant created successfully
+                  data:
+                    $ref: '#/components/schemas/Restaurant'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restaurant/{id}:
+    get:
+      tags:
+        - Restaurants
+      summary: Get a specific restaurant
+      description: Retrieve details of a specific restaurant by ID
+      operationId: getRestaurantById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the restaurant to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Restaurant details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Restaurant'
+        '404':
+          description: Restaurant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reservation:
+    post:
+      tags:
+        - Reservations
+      summary: Create a new reservation
+      description: Book a table at a restaurant
+      operationId: reserveTable
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - restaurantId
+                - userId
+                - numberOfGuests
+              properties:
+                restaurantId:
+                  type: integer
+                  example: 1
+                userId:
+                  type: integer
+                  example: 1
+                numberOfGuests:
+                  type: integer
+                  example: 4
+      responses:
+        '201':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Booking created successfully
+                  data:
+                    $ref: '#/components/schemas/Booking'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Restaurant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Reservations
+      summary: Cancel a reservation
+      description: Cancel an existing reservation
+      operationId: cancelReservation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - bookingId
+              properties:
+                bookingId:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Reservation cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Reservation cancelled successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reservation/{userId}:
+    get:
+      tags:
+        - Reservations
+      summary: Get user's reservations
+      description: Retrieve all reservations for a specific user
+      operationId: getAllReservations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user to retrieve reservations for
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User reservations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 3
+                  data:
+                    type: object
+                    properties:
+                      all:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+                      active:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+                      completed:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+                      cancelled:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login or signup
+
+  schemas:
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Italian Bistro
+        location:
+          type: string
+          example: 123 Main St, New York, NY
+        cuisine:
+          type: array
+          items:
+            type: string
+          example: ['Italian', 'Mediterranean']
+        totalSeats:
+          type: integer
+          example: 50
+        seatsAvailable:
+          type: integer
+          example: 45
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        restaurantId:
+          type: integer
+          example: 1
+        numberOfGuests:
+          type: integer
+          example: 4
+        status:
+          type: string
+          enum: [ACTIVE, COMPLETED, CANCELLED]
+          example: ACTIVE
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        restaurant:
+          $ref: '#/components/schemas/Restaurant'
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error message
+        error:
+          type: string
+          example: Detailed error description

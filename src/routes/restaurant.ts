@@ -7,4 +7,5 @@ const restaurantRouter = Router();
 restaurantRouter.post('/', authenticateToken, createRestaurant);
 restaurantRouter.get('/', authenticateToken, getAllRestaurants);
 restaurantRouter.get('/:id', authenticateToken, getRestaurantById);
+
 export default restaurantRouter;

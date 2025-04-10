@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 import restaurantRouter from './routes/restaurant';
 import userRouter from './routes/user';
 import reservationRouter from './routes/reservation';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+import path from 'path';
 
 // Load environment variables
 dotenv.config({ path: '.env' });
@@ -18,6 +21,9 @@ app.use(express.json());
 app.use('/api/v1/restaurant', restaurantRouter);
 app.use('/api/v1/reservation', reservationRouter);
 app.use('/api/v1/user', userRouter);
+
+const swaggerDocument = YAML.load(path.join(__dirname, 'openapi.yaml'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
