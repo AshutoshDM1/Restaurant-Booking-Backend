@@ -21,8 +21,8 @@ A backend API for restaurant table booking applications, built with Node.js, Exp
 
 ## 🌐 Live API
 
-Base URL: https://restaurant-table-booking-backend.elitedev.tech
-OpenAPI Doc URL: https://restaurant-table-booking-backend.elitedev.tech/api-docs/
+Base URL: https://restaurant-booking-backend-rb4t.onrender.com
+OpenAPI Doc URL: https://restaurant-booking-backend-rb4t.onrender.com/api-docs/
 
 ## ✨ Features
 
